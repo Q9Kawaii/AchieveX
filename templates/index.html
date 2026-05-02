@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievement System | Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #1e1e1e;
+            --sql-green: #4af626;
+        }
+        body { background-color: #f8f9fa; }
+        
+        /* Layout */
+        .wrapper { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; padding: 40px; }
+        
+        /* SQL Sidebar */
+        .sidebar {
+            width: 350px;
+            background: var(--sidebar-bg);
+            color: var(--sql-green);
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+        
+        pre { 
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--sql-green);
+            margin-bottom: 15px;
+        }
+
+        /* UI Components */
+        .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .btn-filter { border-radius: 20px; padding: 5px 20px; text-decoration: none; transition: 0.3s; }
+        .table thead { background: #f1f3f5; }
+        .status-badge { font-size: 0.8rem; padding: 5px 10px; border-radius: 12px; font-weight: bold; }
+        
+        /* Form Styling */
+        label { font-weight: 600; margin-bottom: 5px; color: #495057; }
+        .form-control, .form-select { margin-bottom: 15px; border-radius: 8px; }
+    </style>
+</head>
+
+<body>
+
+<div class="wrapper">
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="fw-bold text-dark">Student Achievement System</h1>
+            <div class="filter-group">
+                <a href="/" class="btn btn-outline-secondary btn-sm btn-filter">All</a>
+                <a href="/filter/Approved" class="btn btn-outline-success btn-sm btn-filter">Approved</a>
+                <a href="/filter/Pending" class="btn btn-outline-warning btn-sm btn-filter">Pending</a>
+                <a href="/filter/Rejected" class="btn btn-outline-danger btn-sm btn-filter">Rejected</a>
+            </div>
+        </header>
+
+        <div class="row">
+            <!-- ADD STUDENT FORM -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Register Student</h4>
+                        <form action="/add-student" method="POST">
+                            <div class="row">
+                                <div class="col">
+                                    <label>Net ID</label>
+                                    <input name="net_id" class="form-control" placeholder="e.g. js123" required>
+                                </div>
+                                <div class="col">
+                                    <label>Email</label>
+                                    <input type="email" name="email" class="form-control" placeholder="email@uni.edu" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <label>First Name</label>
+                                    <input name="first_name" class="form-control" required>
+                                </div>
+                                <div class="col">
+                                    <label>Last Name</label>
+                                    <input name="last_name" class="form-control" required>
+                                </div>
+                            </div>
+                            <label>Date of Birth</label>
+                            <input type="date" name="dob" class="form-control" required>
+                            
+                            <label>Assigned Faculty</label>
+                            <select name="faculty_id" class="form-select" required>
+                                <option value="" selected disabled>Select Faculty...</option>
+                                {% for f in faculties %}
+                                    <option value="{{ f.net_id }}">
+                                        {{ f.first_name }} ({{ f.net_id }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-primary w-100 mt-2">Add Student</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD ACHIEVEMENT FORM -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Record Achievement</h4>
+                        <form action="/add" method="POST">
+                            <label>Select Student</label>
+                            <select name="student_id" class="form-select">
+                                {% for s in students %}
+                                <option value="{{ s.net_id }}">
+                                    {{ s.first_name }} {{ s.last_name }} ({{ s.net_id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Achievement Title</label>
+                            <input name="title" class="form-control" placeholder="e.g. Dean's List" required>
+                            
+                            <label>Type</label>
+                            <input name="type" class="form-control" placeholder="e.g. Academic" required>
+
+                            <button class="btn btn-dark w-100 mt-4">Submit Achievement</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACHIEVEMENTS TABLE -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="p-3 bg-white border-bottom">
+                    <h4 class="mb-0">Recent Achievements</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Student Name</th>
+                                <th>Achievement Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ row.first_name }} {{ row.last_name }}</td>
+                                <td>{{ row.title }}</td>
+                                <td><span class="text-muted small">{{ row.type }}</span></td>
+                                <td>
+                                    {% if row.status == 'Approved' %}
+                                        <span class="status-badge bg-success-subtle text-success">Approved</span>
+                                    {% elif row.status == 'Rejected' %}
+                                        <span class="status-badge bg-danger-subtle text-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="status-badge bg-warning-subtle text-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/update/{{ row.achievement_id }}/Approved" class="btn btn-outline-success">Approve</a>
+                                        <a href="/update/{{ row.achievement_id }}/Rejected" class="btn btn-outline-danger">Reject</a>
+                                        <a href="/delete/{{ row.achievement_id }}" class="btn btn-light border" onclick="return confirm('Are you sure?')">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL SIDEBAR -->
+    <div class="sidebar">
+        <h5 class="mb-4 d-flex align-items-center">
+            <span class="spinner-grow spinner-grow-sm me-2 text-success"></span>
+            SQL LIVE LOG
+        </h5>
+        {% for q in queries %}
+        <pre>> {{ q }}</pre>
+        {% endfor %}
+    </div>
+</div>
+
+</body>
+</html>
