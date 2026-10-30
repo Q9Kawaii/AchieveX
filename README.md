@@ -62,3 +62,15 @@ This project emphasizes **understanding SQL through interaction**:
 ---
 
 ## 📂 Project Structure
+
+```
+AchieveX/
+├── app.py          # Flask app: routes, database queries, SQL query logging
+└── templates/      # Jinja2 HTML templates
+```
+
+---
+
+## 👤 Author
+
+Built by [Yash Dingar](https://github.com/Q9Kawaii) · [Portfolio](https://yashdingar.space) · [LinkedIn](https://www.linkedin.com/in/yashdingar/)
